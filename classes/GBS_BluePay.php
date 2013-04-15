@@ -302,8 +302,14 @@ class Group_Buying_BluePay extends Group_Buying_Credit_Card_Processors {
 		if ( self::DEBUG ) error_log( "checkout: " . print_r( $checkout->cache, true ) );
 		$user = get_userdata( $purchase->get_user() );
 		$AIMdata = array();
-		$AIMdata ['x_login'] = $this->api_username;
-		$AIMdata ['x_tran_key'] = $this->api_password;
+
+		// Get username and password from charity
+		$charity = GB_Charity::get_instance( $checkout->cache['gb_charity'] );
+		if ( !is_a( $charity, 'GB_Charity' ) ) {
+			return FALSE;
+		}
+		$AIMdata ['x_login'] = $charity->get_username();
+		$AIMdata ['x_tran_key'] = $charity->get_password();
 
 		$AIMdata ['x_version'] = '3.1';
 		$AIMdata ['x_delim_data'] = 'TRUE';
@@ -350,12 +356,16 @@ class Group_Buying_BluePay extends Group_Buying_Credit_Card_Processors {
 		if ( !$this->checkout_has_charity( $checkout, $purchase ) ) {
 			return 0;
 		}
-		$percentage = $this->charity_percentage;
+		$charity = GB_Charity::get_instance( $checkout->cache['gb_charity'] );
+		if ( !is_a( $charity, 'GB_Charity' ) ) {
+			return 0;
+		}
+		$percentage = $charity->get_percentage()*0.01;
 		return $purchase->get_total( $this->get_payment_method() )*$percentage;
 	}
 
 	public function checkout_has_charity( Group_Buying_Checkouts $checkout, Group_Buying_Purchase $purchase ) {
-		return isset( $checkout->cache['gb_charity'];
+		return isset( $checkout->cache['gb_charity'] );
 		
 	}
 
@@ -404,5 +414,10 @@ class Group_Buying_BluePay extends Group_Buying_Credit_Card_Processors {
 	public function display_limits_meta_box() {
 		return GB_PATH . '/controllers/payment_processors/meta-boxes/no-tipping.php';
 	}
+
+	// Charity Post Type Options
+	
+
+
 }
 Group_Buying_BluePay::register();

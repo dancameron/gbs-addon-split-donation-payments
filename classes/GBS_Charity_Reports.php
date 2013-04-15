@@ -1,25 +1,10 @@
 <?php
 
-class GBS_Simple_Charities extends Group_Buying_Controller {
-	const TAX = 'gb_charities';
-	const REWRITE_SLUG = 'charities';
+class GBS_Charity_Reports extends Group_Buying_Controller {
 	const REPORT_SLUG = 'charity';
-	const META_KEY = 'gb_purchase_charity';
 
 	public static function init() {
 		parent::init();
-
-		// Add new taxonomy and remove any conflicting taxonomies
-		add_filter( 'gb_attribute_taxonomies', array( get_class(), 'remove_att_tax' ) );
-		add_action( 'init', array( get_class(), 'register_tax' ), 0, 0 );
-
-		// Checkout panes
-		self::register_payment_pane();
-		self::register_review_pane();
-		//self::register_confirmation_pane();
-
-		// Save charity record for purchase
-		add_action( 'completing_checkout', array( get_class(), 'save_charity' ), 10, 1 );
 
 		// Reports
 		/// Purchase Report
@@ -41,23 +26,15 @@ class GBS_Simple_Charities extends Group_Buying_Controller {
 
 		// Filter title
 		add_filter( 'gb_reports_get_title', array( get_class(), 'filter_title' ), 10, 2 );
-
-		// Add link to term
-		add_action ( self::TAX.'_edit_form_fields', array( get_class(), 'location_input_metabox' ), 10, 2 );
-		add_filter( 'manage_edit-'.self::TAX.'_columns', array( get_class(), 'tax_columns' ), 5 );
-		add_action( 'manage_'.self::TAX.'_custom_column', array( get_class(), 'tax_column_info' ), 5, 3 );
-
-		// Templates
-		add_filter( 'template_include', array( get_class(), 'override_template' ) );
-		add_filter( 'gb_deals_index_title', array( get_class(), 'custom_gb_deals_index_title' ) );
 	}
 
 	public function add_navigation( $view ) {
 		if ( $_GET['report'] == self::REPORT_SLUG ) {
-			return GB_SC_PATH . '/views/report/view.php';
+			return GB_CHARITY_PATH . '/views/report/view.php';
 		}
 		return $view;
 	}
+
 
 	public function create_report( $report ) {
 		if ( $report->report != self::REPORT_SLUG || ( !isset( $_GET['id'] ) || $_GET['id'] == '' ) ) {
@@ -81,7 +58,7 @@ class GBS_Simple_Charities extends Group_Buying_Controller {
 			'tags' => self::__( 'Deal Tags' )
 		);
 		$report->columns = $columns;
-		$purchases = self::get_purchase_by_charity( $_GET['id'] );
+		$purchases = GB_Charities::get_purchase_by_charity( $_GET['id'] );
 		$purchase_array = array();
 		foreach ( $purchases as $purchase_id ) {
 			$purchase = Group_Buying_Purchase::get_instance( $purchase_id );
@@ -138,65 +115,6 @@ class GBS_Simple_Charities extends Group_Buying_Controller {
 
 
 	/**
-	 * Registers the charity taxonomy.
-	 *
-	 * @static
-	 * @return void
-	 */
-	public static function register_tax() {
-		$labels = array(
-			'name' => _x( 'Charities', 'taxonomy general name' ),
-			'singular_name' => _x( 'Charity', 'taxonomy singular name' ),
-			'search_items' =>  __( 'Search Charities' ),
-			'popular_items' => __( 'Popular Charities' ),
-			'all_items' => __( 'All Charities' ),
-			'parent_item' => null,
-			'parent_item_colon' => null,
-			'edit_item' => __( 'Edit Charity' ),
-			'update_item' => __( 'Update Charity' ),
-			'add_new_item' => __( 'Add New Charity' ),
-			'new_item_name' => __( 'New Charity Name' ),
-			'separate_items_with_commas' => __( 'Separate charity with commas' ),
-			'add_or_remove_items' => __( 'Add or remove charities' ),
-			'choose_from_most_used' => __( 'Choose from the most used charities' ),
-			'menu_name' => __( 'Charities' ),
-		);
-		$taxonomy_args = array(
-			'hierarchical' => TRUE,
-			'labels' => $labels,
-			'show_ui' => TRUE,
-			'rewrite' => array(
-				'slug' => self::REWRITE_SLUG,
-				'with_front' => FALSE,
-				'hierarchical' => FALSE,
-			),
-		);
-		register_taxonomy( self::TAX, Group_Buying_Deal::POST_TYPE, $taxonomy_args );
-	}
-
-	public static function get_url() {
-		return get_term_link( self::TERM, self::TAX );
-	}
-
-	public static function is_charity_query( WP_Query $query = NULL ) {
-		$taxonomy = get_query_var( 'taxonomy' );
-		if ( $taxonomy == self::TAX || $taxonomy == self::TAX || $taxonomy == self::TAX ) {
-			return TRUE;
-		}
-		return FALSE;
-	}
-
-	public static function get_terms() {
-		return get_terms( self::TAX, array( 'hide_empty'=>0, 'fields'=>'all' ) );
-	}
-
-	public static function remove_att_tax( $taxonomies ) {
-		unset( $taxonomies['charity'] );
-		return $taxonomies;
-	}
-
-
-	/**
 	 * Register action hooks for displaying and processing the payment page
 	 *
 	 * @return void
@@ -247,11 +165,11 @@ class GBS_Simple_Charities extends Group_Buying_Controller {
 	 * @return array
 	 */
 	public static function display_review_page( $panes, $checkout ) {
-		$charity_term = get_term_by( 'slug', $checkout->cache['gb_charity'], self::TAX );
+		$charity_id = $checkout->cache['gb_charity'];
 		if ( $checkout->cache['gb_charity'] ) {
 			$panes['gb_charity'] = array(
 				'weight' => 5,
-				'body' => self::_load_view_to_string( 'checkout/charity-review', array( 'charity_term' => $charity_term ) ),
+				'body' => self::_load_view_to_string( 'checkout/charity-review', array( 'charity_id' => $charity_id ) ),
 			);
 		}
 		return $panes;
@@ -265,25 +183,6 @@ class GBS_Simple_Charities extends Group_Buying_Controller {
 		return ob_get_clean();
 	}
 
-
-	public static function save_charity( $checkout ) {
-		if ( $checkout->cache['gb_charity'] && $checkout->cache['purchase_id'] ) {
-			$purchase = Group_Buying_Purchase::get_instance( $checkout->cache['purchase_id'] );
-			self::set_purchase_charity( $purchase, $checkout->cache['gb_charity'] );
-		}
-	}
-
-	public function set_purchase_charity( Group_Buying_Purchase $purchase, $charity_slug ) {
-		$purchase->save_post_meta( array(
-				self::META_KEY => $charity_slug,
-			) );
-	}
-
-	public function get_purchase_charity( Group_Buying_Purchase $purchase ) {
-		return $purchase->get_post_meta( self::META_KEY );
-	}
-
-
 	public static function set_deal_purchase_report_data_column( $columns ) {
 		$columns['charity'] = self::__( 'Charity' );
 		return $columns;
@@ -296,10 +195,9 @@ class GBS_Simple_Charities extends Group_Buying_Controller {
 		foreach ( $array as $records ) {
 			$items = array();
 			$purchase = Group_Buying_Purchase::get_instance( $records['id'] );
-			$charity = self::get_purchase_charity( $purchase );
-			if ( !empty( $charity ) ) {
-				$charity_term = get_term_by( 'slug', $charity, self::TAX );
-				$charity = array( 'charity' => $charity_term->name );
+			$charity_id = GB_Charities::get_purchase_charity_id( $purchase );
+			if ( $charity_id ) {
+				$charity = array( 'charity' => get_the_title( $charity_id ) );
 			} else {
 				$charity = array( 'charity' => self::__( 'N/A' ) );
 			}
@@ -308,111 +206,11 @@ class GBS_Simple_Charities extends Group_Buying_Controller {
 		return $new_array;
 	}
 
-
-
-	public static function get_purchase_by_charity( $charity = null, $date_range = null ) {
-		if ( null == $charity ) return; // nothing more to to
-
-		$args = array(
-			'fields' => 'ids',
-			'post_type' => gb_get_purchase_post_type(),
-			'post_status' => 'any',
-			'posts_per_page' => -1, // return this many
-			'meta_query' => array(
-				array(
-					'key' => self::META_KEY,
-					'value' => $charity,
-					'compare' => '='
-				)
-			)
-		);
-		add_filter( 'posts_where', array( get_class(), 'filter_where' ) );
-		$purchases = new WP_Query( $args );
-		remove_filter( 'posts_where', array( get_class(), 'filter_where' ) );
-		return $purchases->posts;
-	}
-
-	public function filter_where( $where = '' ) {
-		// range based
-		if ( isset( $_GET['range'] ) ) {
-			$range = ( empty( $_GET['range'] ) ) ? 7 : intval( $_GET['range'] ) ;
-			$where .= " AND post_date > '" . date( 'Y-m-d', strtotime( '-'.$range.'days' ) ) . "'";
-			return $where;
-		}
-		// date based
-		if ( isset( $_GET['from'] ) ) {
-			// from
-			$from = $_GET['from'];
-			// to
-			if ( !isset( $_GET['to'] ) || $_GET['to'] == '' ) {
-				$now = time() + ( get_option( 'gmt_offset' ) * 3600 );
-				$to = gmdate( 'Y-m-d', $now );
-			} else {
-				$to = $_GET['to'];
-			}
-
-			$where .= " AND post_date >= '".$from."' AND post_date < '".$to."'";
-		}
-		return $where;
-	}
-
 	public function filter_title( $title, $report ) {
 		if ( $report == 'charity' ) {
-			$term = get_term_by( 'slug', $_GET['id'], self::TAX );
-			return $term->name.' '.$title;
+			return get_the_title( $_GET['id'] ).' '.$title;
 		}
 		return $title;
-	}
-
-	public static function location_input_metabox( $tag ) {
-?>
-				</tbody>
-			</table>
-			<h3><?php gb_e( 'Reports' ) ?></h3>
-			<table class="form-table">
-				<tbody>
-					<tr class="form-field">
-						<th scope="row" valign="top"></th>
-						<td><a href="<?php gb_get_charity_purchases_report_url( $tag->slug ) ?>" class="button" target="_blank"><?php gb_e( 'Purchase Reports' ) ?></a></td>
-					</tr>
-				</tbody>
-			</table>
-		<?php
-	}
-
-	function tax_columns( $defaults ) {
-		$defaults['riv_news_type_ids'] = __( 'Report' );
-		return $defaults;
-	}
-
-	function tax_column_info( $value, $column_name, $id ) {
-		if ( $column_name == 'riv_news_type_ids' ) {
-			$term = get_term_by( 'id', $id, self::TAX );
-			return '<a href="'.gb_get_charity_purchases_report_url( $term->slug ).'" class="button" target="_blank">'.gb__( 'Purchase Report' ).'</a>';
-		}
-	}
-
-	public static function override_template( $template ) {
-		if ( self::is_charity_query() ) {
-			$taxonomy = get_query_var( 'taxonomy' );
-			$template = self::locate_template( array(
-					'deals/deal-'.$taxonomy.'.php',
-					'deals/deal-type.php',
-					'deals/deal-types.php',
-					'deals/deals.php',
-					'deals/index.php',
-					'deals/archive.php',
-				), $template );
-		}
-		return $template;
-	}
-
-	public static function custom_gb_deals_index_title( $title ) {
-		if ( self::is_charity_query() ) {
-			$title = gb_e( 'Charitable Deals' );
-		}
-		return $title;
-
 	}
 
 }

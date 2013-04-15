@@ -15,7 +15,7 @@
   	$date_range = array(1,7,30,60,90,120,365);
 	foreach ($date_range as $range) {
 		$active = ($range == $_GET['range']) ? 'active' : '' ;
-		$button = '<span class="report_nav_button '.$active.'"><a class="report_button" href="'.add_query_arg( array( 'report' => $_GET['report'], 'id' => $_GET['id'], 'range' => $range ), $report->get_url()).'">'.sprintf(self::__('Previous %s Days'),$range).'</a></span>';
+		$button = '<span class="report_nav_button '.$active.'"><a class="report_button alt_button font_small" href="'.add_query_arg( array( 'report' => $_GET['report'], 'id' => $_GET['id'], 'range' => $range ), $report->get_url()).'">'.sprintf(self::__('Previous %s Days'),$range).'</a></span>';
 		echo $button;
 	}
    ?>
