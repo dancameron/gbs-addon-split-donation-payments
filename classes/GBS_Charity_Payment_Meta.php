@@ -1,19 +1,19 @@
 <?php
 
-class GBS_Attributes_MetaBox extends Group_Buying_Controller {
+class GBS_Charity_Payment_Meta extends Group_Buying_Controller {
 
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 0 );
 		add_action( 'save_post', array( __CLASS__, 'save_meta_box' ), 10, 2 );
 
 		// Attributes
-		if ( class_exists('Group_Buying_Attribute') ) {
+		if ( class_exists( 'Group_Buying_Attribute' ) ) {
 			add_action( 'gb_meta_box_deal_attributes_rows_header', array( __CLASS__, 'add_attribute_column_header' ) );
 			add_action( 'gb_meta_box_deal_attributes_rows', array( __CLASS__, 'add_attribute_row' ) );
 			add_action( 'gb_meta_box_deal_attributes_rows_js', array( __CLASS__, 'add_attribute_row_js' ) );
 
 
-		add_action( 'save_post', array( __CLASS__, 'save_attributes' ), 10, 2 );
+			add_action( 'save_post', array( __CLASS__, 'save_attributes' ), 10, 2 );
 		}
 	}
 
@@ -24,7 +24,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 	public static function show_meta_box( $post ) {
 		$items = array();
 		$items = GBS_Bundles_Addon::get_bundles( $post->ID );
-		?>
+?>
 		<script type="text/javascript">
 			jQuery(document).ready( function($) {
 
@@ -39,7 +39,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 						$span.removeClass('loading_gif');
 						return;
 					}
-					
+
 					// Delay the ajax call and the loader in case the user is faster than the callbacks
 					setTimeout(function(){
 						if ( $field.val() == $item_id ) {
@@ -61,7 +61,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 							});
 						}
 					},500);
-					
+
 				};
 				var add_input_item = function(e) {
 					var $att_selected = $(this);
@@ -72,7 +72,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 					var $att_item_id = $att_selected.data('id');
 					var $att_item_title = $att_selected.data('name');
 					var $att_id = $att_wrap.data('att_id');
-					
+
 					// remove note
 					$att_wrap.find('.no_items').remove();
 
@@ -81,7 +81,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 					// Reset the input
 					$att_field.val('');
 					$att_span.empty();
-					
+
 				};
 				// AJAX search based on deal id
 				if ( $('.deal_id_input').length > 0 ) {
@@ -103,10 +103,10 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 			}
 		</style>
 		<div class="bundled_items clearfix">
-			<strong><?php gb_e('Bundled Deals') ?></strong><br/>
+			<strong><?php gb_e( 'Bundled Deals' ) ?></strong><br/>
 			<p class="associated_items">
 				<?php if ( empty( $items ) ): ?>
-					<span class="no_items"><?php gb_e('No items bundled yet.') ?></span>
+					<span class="no_items"><?php gb_e( 'No items bundled yet.' ) ?></span>
 				<?php else: ?>
 					<?php foreach ( $items as $item_id ): ?>
 						<label><input type="checkbox" checked value="<?php echo $item_id ?>" name="gbs_bundles[]" /> <?php echo get_the_title( $item_id ) ?></label><br/>
@@ -119,7 +119,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 				<br/><span class="deals_name_ajax">&nbsp;</span>
 			</p>
 		</div><!--  .bundled_items -->
-		
+
 		<?php
 	}
 
@@ -154,19 +154,19 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 	////////////////
 	// Attributes //
 	////////////////
-	
+
 	public function add_attribute_column_header() {
 		echo '<th id="bundled_items">' . gb__( 'Bundled Items' ) . '</th>';
 	}
-	
+
 	public function add_attribute_row( $post_id, $data ) {
 		$items = array();
 		$items = GBS_Bundles_Addon::get_bundles( $post_id );
-		?>
+?>
 			<td class="attribute_bundled_items" data-att_id="<?php echo $post_id ?>">
 				<p id="<?php echo $post_id ?>_attributes_associated_items" class="attributes_associated_items">
 					<?php if ( empty( $items ) ): ?>
-						<span class="no_items"><?php gb_e('No items bundled yet.') ?></span>
+						<span class="no_items"><?php gb_e( 'No items bundled yet.' ) ?></span>
 					<?php else: ?>
 						<?php foreach ( $items as $item_id ): ?>
 							<label><input type="checkbox" checked value="<?php echo $item_id ?>" name="gb-attribute[gbs_bundles][<?php echo $post_id ?>][]" /> <?php echo get_the_title( $item_id ) ?></label><br/>
@@ -181,9 +181,9 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 			</td>
 		<?php
 	}
-	
+
 	public function add_attribute_row_js() {
-		?>
+?>
 			<script type="text/javascript">
 				jQuery(document).ready( function($) {
 
@@ -198,7 +198,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 							$span.removeClass('loading_gif');
 							return;
 						}
-						
+
 						// Delay the ajax call and the loader in case the user is faster than the callbacks
 						setTimeout(function(){
 							if ( $field.val() == $item_id ) {
@@ -220,7 +220,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 								});
 							}
 						},500);
-						
+
 					};
 					var add_input_item = function(e) {
 						var $att_selected = $(this);
@@ -231,7 +231,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 						var $att_item_id = $att_selected.data('id');
 						var $att_item_title = $att_selected.data('name');
 						var $att_id = $att_wrap.data('att_id');
-						
+
 						// remove note
 						$att_wrap.find('.no_items').remove();
 
@@ -240,7 +240,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 						// Reset the input
 						$att_field.val('');
 						$att_span.empty();
-						
+
 					};
 					// AJAX search based on deal id
 					if ( $('.deal_id_input').length > 0 ) {
@@ -263,7 +263,7 @@ class GBS_Attributes_MetaBox extends Group_Buying_Controller {
 			</style>
 			<td class="bundled_items">
 				<p class="attributes_associated_items">
-					<span class="no_items"><?php gb_e('This attribute needs to be saved or published before a bundles can be added.') ?></span>
+					<span class="no_items"><?php gb_e( 'This attribute needs to be saved or published before a bundles can be added.' ) ?></span>
 				</p>
 				<?php /*/ ?>
 				<p class="attributes_associated_items">

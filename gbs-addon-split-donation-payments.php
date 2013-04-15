@@ -1,14 +1,15 @@
 <?php
 /*
-Plugin Name: GBS Bundles
-Version: 2
+Plugin Name: GBS Split Donation Payments
+Version: 1
 Plugin URI: http://groupbuyingsite.com/marketplace
-Description: Provides another deal to a purchaser, this add-on uses attributes to provide a selection of the secondary deal/item to be given.
-Plugin URI: http://groupbuyingsite.com/marketplace
-Author: GroupBuyingSite.com
-Author URI: http://groupbuyingsite.com/features
+Description: Splits up payments between a charity and the site.
+Plugin URI: http://groupbuyingsite.com/marketplace/
+Author: Sprout Venture
+Author URI: http://sproutventure.com/
 Plugin Author: Dan Cameron
 Plugin Author URI: http://sproutventure.com/
+Contributors: Dan Cameron
 Text Domain: group-buying
 */
 
@@ -22,4 +23,10 @@ function gb_load_bundles() {
 		// Hook this plugin into the GBS add-ons controller
 		add_filter( 'gb_addons', array( 'GBS_Bundles_Addon', 'gb_addon' ), 10, 1 );
 	}
+}
+
+// Load up the payment processor
+add_action('gb_register_processors', 'gb_load_split_blue_pay');
+function gb_load_split_blue_pay() {
+	require_once 'classes/GBS_BluePay.php';
 }
