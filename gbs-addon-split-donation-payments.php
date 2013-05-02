@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: GBS Split Donation Payments
-Version: 1
+Version: 1.1
 Plugin URI: http://groupbuyingsite.com/marketplace
 Description: Splits up payments between a charity and the site.
 Plugin URI: http://groupbuyingsite.com/marketplace/
