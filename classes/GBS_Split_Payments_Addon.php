@@ -10,7 +10,7 @@ class GBS_Split_Payments_Addon {
 		GB_Charity::init();
 
 		// Controller
-		require_once 'GBS_Charities.php';
+		require_once 'GBS_Simple_Charities.php';
 		GB_Charities::init();
 
 		// Reports
