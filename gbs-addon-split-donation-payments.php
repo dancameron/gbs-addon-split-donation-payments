@@ -13,7 +13,7 @@ Contributors: Dan Cameron
 Text Domain: group-buying
 */
 
-define ('GB_CHARITY_URL', plugins_url( '', __FILE__) );
+define( 'GB_CHARITY_URL', plugins_url( '', __FILE__ ) );
 define( 'GB_CHARITY_PATH', WP_PLUGIN_DIR . '/' . basename( dirname( __FILE__ ) ) );
 
 // Load after all other plugins since we need to be compatible with groupbuyingsite
@@ -29,7 +29,7 @@ function gb_load_split_payments() {
 }
 
 // Load up the payment processor
-add_action('gb_register_processors', 'gb_load_split_blue_pay');
+add_action( 'gb_register_processors', 'gb_load_split_blue_pay' );
 function gb_load_split_blue_pay() {
 	require_once 'classes/GBS_BluePay.php';
 }
